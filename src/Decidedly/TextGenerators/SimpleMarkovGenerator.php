@@ -57,12 +57,16 @@ class SimpleMarkovGenerator {
 	}
 
 	public function generateText($characterCount) {
-		$characterCounter = 0;
 		$string = "";
 
 		$currentWord = array_rand($this->relations);
+		
 		while(strlen($string . " " . $currentWord) < $characterCount) {
-			$string .= " " . $currentWord;
+			if(strlen($string > 0)) {
+				$string .= " " . $currentWord;
+			} else {
+				$string = $currentWord;
+			}
 
 			if(isset($this->relations[$currentWord]) && is_array($this->relations[$currentWord])) {
 				$currentWord = $this->getRandomWeightedElement($this->relations[$currentWord]);
