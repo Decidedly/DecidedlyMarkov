@@ -4,9 +4,10 @@ namespace Decidedly\TextGenerators;
 
 class SimpleMarkovGenerator {
 	// var $delim = " \r\n\t,.!?:;()[]";
-	var $delim = " \r\n\t()[]";
+	var $delim = " \r\n\t()[]\"\'";
 	var $relations = array();
 	var $chain = array();
+	var $sentenceEndingPunctuation = ".!";
 
 	function __constructor() {
 
@@ -24,7 +25,7 @@ class SimpleMarkovGenerator {
 			
 			// Move the current word so that we can use it next time.
 			$lastWord = $thisWord;
-		    // echo "$thisWord\n";
+		 
 		  // Get next word
 		  $thisWord = strtok($this->delim);
 		}
@@ -56,13 +57,15 @@ class SimpleMarkovGenerator {
 		}		
 	}
 
-	public function generateText($characterCount) {
+	public function generateText($characterCount, $minWordCount = null) {
 		$string = "";
+		$wordCount = 0;
 
 		$currentWord = array_rand($this->relations);
 		
 		while(strlen($string . " " . $currentWord) < $characterCount) {
-			if(strlen($string > 0)) {
+			$wordCount++;
+			if(strlen($string) > 0) {
 				$string .= " " . $currentWord;
 			} else {
 				$string = $currentWord;
@@ -71,16 +74,20 @@ class SimpleMarkovGenerator {
 			if(isset($this->relations[$currentWord]) && is_array($this->relations[$currentWord])) {
 				$currentWord = $this->getRandomWeightedElement($this->relations[$currentWord]);
 			} else {
-				if(strlen($string . ".") < $characterCount) {
-					$string .= ".";
+				if($minWordCount !== null && $minWordCount >= 0 && $wordCount > $minWordCount) {
+					break;
+				} else {
+					if(strlen($string . ".") < $characterCount) {
+						$string .= ".";
+					}
+					$currentWord = array_rand($this->relations);
 				}
-				$currentWord = array_rand($this->relations);
 			}
 		}
 
-		if(strlen($string . ".") < $characterCount) {
-			$string .= ".";
-		}
+		// if(strlen($string . ".") < $characterCount) {
+		// 	$string .= ".";
+		// }
 
 		return $string;
 	}
