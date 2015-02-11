@@ -1,0 +1,15 @@
+{
+    "name": "decidedly/decidedly-markov",
+    "description": "A simple markov chain text generator.",
+    "require": {},
+    "autoload": {
+        "psr-4": {"Decidedly\\": "src/Decidedly"}
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Hilowitz",
+            "email": "dhilowitz@gmail.com"
+        }
+    ]
+}
