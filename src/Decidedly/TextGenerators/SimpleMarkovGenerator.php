@@ -3,28 +3,36 @@
 namespace Decidedly\TextGenerators;
 
 class SimpleMarkovGenerator {
-	// var $delim = " \r\n\t,.!?:;()[]";
-	var $delim = " \r\n\t()[]\"\'";
+	
+	// These are characters that fall in between words
+	var $delim = " \r\n\t()[]\"";
 	var $relations = array();
 	var $chain = array();
 	var $sentenceEndingPunctuation = ".!";
 
-	function __constructor() {
+	// The number of words that we use as a key when parsing
+	var $prefixLength;
 
+	function __construct($prefixLength = 1) {
+		$this->prefixLength = $prefixLength;
 	}
 
 	public function parseText($text) {
 		$thisWord = strtok($text, $this->delim);
+		$lastWords = array();
 
 		while ($thisWord !== false) {
-			$thisWord = $thisWord;
 			
-			if(!empty($lastWord)) {
+			if(count($lastWords) == $this->prefixLength) {
+				$lastWord = implode(' ', $lastWords);
 				$this->addWordTransitionToChain($lastWord, $thisWord);
 			}
 			
 			// Move the current word so that we can use it next time.
-			$lastWord = $thisWord;
+			$lastWords[] = $thisWord;
+			while(count($lastWords) > $this->prefixLength) {
+				array_shift($lastWords);
+			}
 		 
 		  // Get next word
 		  $thisWord = strtok($this->delim);
@@ -41,35 +49,40 @@ class SimpleMarkovGenerator {
 			} else {
 				$this->relations[$firstWord][$secondWord]++;
 			}
-			$this->calculateWordProbabilities($firstWord);
 		}
 	}
 	
 
-	private function calculateWordProbabilities($word) {
-		$totalCount = 0;
-		foreach ($this->relations[$word] as $secondWord => $count) {
-			$totalCount += $count;
-		}
-
-		foreach ($this->relations[$word] as $secondWord => $count) {
-			$this->chain[$word][$secondWord] = ($count / $totalCount);
-		}		
-	}
-
 	public function generateText($characterCount, $minWordCount = null) {
 		$string = "";
 		$wordCount = 0;
+		$lastWords = array();
 
 		$currentWord = array_rand($this->relations);
 		
 		while(strlen($string . " " . $currentWord) < $characterCount) {
 			$wordCount++;
+
 			if(strlen($string) > 0) {
 				$string .= " " . $currentWord;
 			} else {
 				$string = $currentWord;
 			}
+
+			// Tokenize our current word and add it to the last words array
+			// We tokenize because at the start of a string, we will be dealing
+			// with multiple words 
+			$currentWordArray = explode(" ", $currentWord);
+			foreach($currentWordArray as $token) {
+				$lastWords[] = $token;
+			}
+
+			while(count($lastWords) > $this->prefixLength) {
+				array_shift($lastWords);
+			}
+				
+
+			$currentWord = implode(" ", $lastWords);
 
 			if(isset($this->relations[$currentWord]) && is_array($this->relations[$currentWord])) {
 				$currentWord = $this->getRandomWeightedElement($this->relations[$currentWord]);
