@@ -9,12 +9,14 @@ class SimpleMarkovGenerator {
 	var $relations = array();
 	var $chain = array();
 	var $sentenceEndingPunctuation = ".!";
+	var $verbose = false;
 
 	// The number of words that we use as a key when parsing
 	var $prefixLength;
 
-	function __construct($prefixLength = 1) {
+	function __construct($prefixLength = 1, $verbose = false) {
 		$this->prefixLength = $prefixLength;
+		$this->verbose = $verbose;
 	}
 
 	public function parseText($text) {
@@ -51,18 +53,52 @@ class SimpleMarkovGenerator {
 			}
 		}
 	}
-	
 
-	public function generateText($characterCount, $minWordCount = null) {
+
+	public function generateText($characterCount, $minWordCount = null, $rejectInevitablePhrases = false) {
+		$string = '';
+		$attempts = 0;
+		
+		while(empty($string) && $attempts < 100) {
+			$phraseObject = $this->generatePhrase($characterCount);
+			$rejectPhrase = false;
+			$attempts++;
+
+			if($rejectInevitablePhrases && $phraseObject->phraseIsInevitable) {
+				$rejectPhrase = true;
+				if($this->verbose) {
+					echo "Rejecting the inevitable phrase: {$phraseObject->text}\n";
+				}
+			}
+
+			if($phraseObject->wordCount < $minWordCount) {
+				if($this->verbose) {
+					echo "Rejecting this phrase because its too short: {$phraseObject->text}\n";
+				}
+
+				$rejectPhrase = true;
+			}
+
+			if(!$rejectPhrase) {
+				if($string == '')
+					$string = $phraseObject->text;
+				else 
+					$string .= $phraseObject->text;
+			}
+		}
+
+		return $string;
+	}
+
+	public function generatePhrase($maxCharacterCount = 140) {
 		$string = "";
 		$wordCount = 0;
 		$lastWords = array();
 
 		$currentWord = array_rand($this->relations);
+		$phraseIsInevitable = true;
 		
-		while(strlen($string . " " . $currentWord) < $characterCount) {
-			$wordCount++;
-
+		while(strlen($string . " " . $currentWord) < $maxCharacterCount) {
 			if(strlen($string) > 0) {
 				$string .= " " . $currentWord;
 			} else {
@@ -73,6 +109,7 @@ class SimpleMarkovGenerator {
 			// We tokenize because at the start of a string, we will be dealing
 			// with multiple words 
 			$currentWordArray = explode(" ", $currentWord);
+			$wordCount += count($currentWordArray);
 			foreach($currentWordArray as $token) {
 				$lastWords[] = $token;
 			}
@@ -85,24 +122,17 @@ class SimpleMarkovGenerator {
 			$currentWord = implode(" ", $lastWords);
 
 			if(isset($this->relations[$currentWord]) && is_array($this->relations[$currentWord])) {
+				if(count($this->relations[$currentWord]) > 1) {
+					$phraseIsInevitable = false;
+				} 
 				$currentWord = $this->getRandomWeightedElement($this->relations[$currentWord]);
 			} else {
-				if($minWordCount !== null && $minWordCount >= 0 && $wordCount > $minWordCount) {
-					break;
-				} else {
-					if(strlen($string . ".") < $characterCount) {
-						$string .= ".";
-					}
-					$currentWord = array_rand($this->relations);
-				}
+				// We've reached a dead-end
+				break;
 			}
 		}
 
-		// if(strlen($string . ".") < $characterCount) {
-		// 	$string .= ".";
-		// }
-
-		return $string;
+		return (object) array('text'=>$string, 'phraseIsInevitable'=>$phraseIsInevitable, 'wordCount'=>$wordCount);
 	}
 
 	/**
