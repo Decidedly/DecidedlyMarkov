@@ -6,17 +6,17 @@ class SimpleMarkovGenerator {
 	
 	// These are characters that fall in between words
 	var $delim = " \r\n\t()[]\"";
-	var $relations = array();
-	var $chain = array();
 	var $sentenceEndingPunctuation = ".!";
 	var $verbose = false;
 
 	// The number of words that we use as a key when parsing
 	var $prefixLength;
+	var $dataSource;
 
-	function __construct($prefixLength = 1, $verbose = false) {
+	function __construct($prefixLength = 1, $verbose = false, MarkovDataSource $dataSource) {
 		$this->prefixLength = $prefixLength;
 		$this->verbose = $verbose;
+		$this->dataSource = $dataSource;
 	}
 
 	public function parseText($text) {
@@ -27,7 +27,7 @@ class SimpleMarkovGenerator {
 			
 			if(count($lastWords) == $this->prefixLength) {
 				$lastWord = implode(' ', $lastWords);
-				$this->addWordTransitionToChain($lastWord, $thisWord);
+				$this->dataSource->addRelation($lastWord, $thisWord);
 			}
 			
 			// Move the current word so that we can use it next time.
@@ -40,20 +40,6 @@ class SimpleMarkovGenerator {
 			$thisWord = strtok($this->delim);
 		}
 	}
-
-	private function addWordTransitionToChain($firstWord, $secondWord) {
-		
-		if(!isset($this->relations[$firstWord])) {
-			$this->relations[$firstWord] = array($secondWord=>1);
-		} else {
-			if(!isset($this->relations[$firstWord][$secondWord])) {
-				$this->relations[$firstWord][$secondWord] = 1;
-			} else {
-				$this->relations[$firstWord][$secondWord]++;
-			}
-		}
-	}
-
 
 	public function generateText($characterCount, $minWordCount = null, $rejectInevitablePhrases = false) {
 		$string = '';
@@ -95,7 +81,7 @@ class SimpleMarkovGenerator {
 		$wordCount = 0;
 		$lastWords = array();
 
-		$currentWord = array_rand($this->relations);
+		$currentWord = $this->dataSource->getRandomPrefix();
 		$phraseIsInevitable = true;
 		
 		while(strlen($string . " " . $currentWord) < $maxCharacterCount) {
@@ -121,11 +107,13 @@ class SimpleMarkovGenerator {
 
 			$currentWord = implode(" ", $lastWords);
 
-			if(isset($this->relations[$currentWord]) && is_array($this->relations[$currentWord])) {
-				if(count($this->relations[$currentWord]) > 1) {
+			$suffixesForCurrentPrefix = $this->dataSource->getSuffixesForPrefix($currentWord);
+
+			if(isset($suffixesForCurrentPrefix) && is_array($suffixesForCurrentPrefix)) {
+				if(count($suffixesForCurrentPrefix) > 1) {
 					$phraseIsInevitable = false;
 				} 
-				$currentWord = $this->getRandomWeightedElement($this->relations[$currentWord]);
+				$currentWord = $this->getRandomWeightedElement($suffixesForCurrentPrefix);
 			} else {
 				// We've reached a dead-end
 				break;
