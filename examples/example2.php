@@ -2,7 +2,7 @@
 
 require '../vendor/autoload.php';
 
-class Example1 {
+class Example2 {
 	public function run() {
 		$markov = new \Decidedly\TextGenerators\SimpleMarkovGenerator(2);
 		$text = file_get_contents("alice.txt");
@@ -13,5 +13,5 @@ class Example1 {
 	}
 }
 
-$app = new Example1();
+$app = new Example2();
 $app->run();
