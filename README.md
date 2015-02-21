@@ -6,6 +6,7 @@ A simple Markov chain text generator.
 * The ability to reject inevitable phrases (phrases that are most likely identical to source material)
 * Added the ability to reject overly short phrases
 
-## To install
+## To Try It Out
     php composer.phar install
-    php examples/example1.php
+    cd ./examples
+    php example1.php
