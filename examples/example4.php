@@ -9,7 +9,7 @@ class Example4 {
 		$text = file_get_contents("alice.txt");
 		$markov->parseText($text);
 
-		$blacklist = array('alice');
+		$blacklist = array('the','he');
 		$string = $markov->generateText(140, 5, true, $blacklist);
 		echo $string . "\n";
 	}

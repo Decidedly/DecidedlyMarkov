@@ -25,11 +25,10 @@ class SimpleMarkovGenerator {
 	}
 
 	public function parseText($text) {
-		$thisWord = strtok($text, $this->delim);
+		$words = $this->tokenizeText($text);
 		$lastWords = array();
 
-		while ($thisWord !== false) {
-			
+		foreach($words as $thisWord) {	
 			if(count($lastWords) == $this->prefixLength) {
 				$lastWord = implode(' ', $lastWords);
 				$this->dataSource->addRelation($lastWord, $thisWord);
@@ -40,9 +39,6 @@ class SimpleMarkovGenerator {
 			while(count($lastWords) > $this->prefixLength) {
 				array_shift($lastWords);
 			}
-		 
-			// Get next word
-			$thisWord = strtok($this->delim);
 		}
 	}
 
@@ -75,7 +71,8 @@ class SimpleMarkovGenerator {
 			}
 
 			foreach($blacklistedWords as $word) {
-				if(stripos($phraseObject->text, $word) !== FALSE) {
+				if($this->phraseContainsWord($phraseObject->text, $word))
+				{
 					if($this->verbose) {
 						echo "Rejecting phrase because it contains the blacklisted word \"{$word}\": {$phraseObject->text}\n";
 					}
@@ -166,5 +163,30 @@ class SimpleMarkovGenerator {
 				return $key;
 			}
 		}
+	}
+
+	function phraseContainsWord($haystack, $needle) {
+		$tokenizedHaystack = $this->tokenizeText($haystack);
+		foreach($tokenizedHaystack as $word) {
+			if(strtolower($word) == strtolower($needle)) {
+				return true;
+			}
+		}
+		return false;				
+	}
+
+	function tokenizeText($text) {
+		$tokenArray = array();
+
+		$thisWord = strtok($text, $this->delim);
+		while ($thisWord !== false) {
+			// Add to array
+			$tokenArray[] = $thisWord;
+			
+		 	// Get next word
+			$thisWord = strtok($this->delim);
+		}
+
+		return $tokenArray;
 	}
 }
