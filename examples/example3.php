@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * This example demonstrates using MySQL as a data source
+*/
 
 require '../vendor/autoload.php';
 
@@ -14,6 +17,7 @@ class Example3 {
 		);
 
 		$markov = new \Decidedly\TextGenerators\SimpleMarkovGenerator(2, true, $dataSource);
+		$text = file_get_contents("alice.txt");
 		$markov->parseText($text);
 		$string = $markov->generateText(140, 5, false);
 		echo $string . "\n";

@@ -9,7 +9,7 @@ class MySqlDataSource implements MarkovDataSource {
 	// Relations Table
 	var $tablePrefix;
 
-	public function __construct($hostname, $username, $password, $database, $tablePrefix) {
+	public function __construct($hostname, $username, $password, $database, $tablePrefix = '') {
 		$this->tablePrefix = $tablePrefix;
 		$dsn = "mysql:host={$hostname};dbname={$database}";
 
@@ -115,7 +115,7 @@ class MySqlDataSource implements MarkovDataSource {
 		$q = $this->dbh->query($sql);
 		return $q->fetchColumn();
 	}
-	
+
 	public function getSuffixesForPrefix($prefix) {
 		$sql = "SELECT suffix.text, relations.count FROM {$this->tablePrefix}prefix as `prefix`
 	INNER JOIN {$this->tablePrefix}relations AS `relations` ON `prefix`.`id` =  `relations`.prefix_id
