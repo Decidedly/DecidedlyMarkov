@@ -46,7 +46,11 @@ class SimpleMarkovGenerator {
 		}
 	}
 
-	public function generateText($characterCount, $minWordCount = null, $rejectInevitablePhrases = false) {
+	public function generateText($characterCount, 
+		$minWordCount = null, 
+		$rejectInevitablePhrases = false, 
+		$blacklistedWords = array()
+	) {
 		$string = '';
 		$attempts = 0;
 		
@@ -69,6 +73,16 @@ class SimpleMarkovGenerator {
 
 				$rejectPhrase = true;
 			}
+
+			foreach($blacklistedWords as $word) {
+				if(stripos($phraseObject->text, $word) !== FALSE) {
+					if($this->verbose) {
+						echo "Rejecting phrase because it contains the blacklisted word \"{$word}\": {$phraseObject->text}\n";
+					}
+					$rejectPhrase = true;
+				}
+			}
+
 
 			if(!$rejectPhrase) {
 				if($string == '')
