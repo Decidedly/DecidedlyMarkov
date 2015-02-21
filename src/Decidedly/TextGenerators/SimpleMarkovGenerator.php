@@ -13,9 +13,14 @@ class SimpleMarkovGenerator {
 	var $prefixLength;
 	var $dataSource;
 
-	function __construct($prefixLength = 1, $verbose = false, MarkovDataSource $dataSource) {
+	function __construct($prefixLength = 1, $verbose = false, MarkovDataSource $dataSource = null) {
 		$this->prefixLength = $prefixLength;
 		$this->verbose = $verbose;
+
+		if($dataSource == null) {
+			$dataSource = new SimpleDataSource('data.json');
+		}
+
 		$this->dataSource = $dataSource;
 	}
 
@@ -109,11 +114,13 @@ class SimpleMarkovGenerator {
 
 			$suffixesForCurrentPrefix = $this->dataSource->getSuffixesForPrefix($currentWord);
 
+
 			if(isset($suffixesForCurrentPrefix) && is_array($suffixesForCurrentPrefix)) {
 				if(count($suffixesForCurrentPrefix) > 1) {
 					$phraseIsInevitable = false;
 				} 
 				$currentWord = $this->getRandomWeightedElement($suffixesForCurrentPrefix);
+			
 			} else {
 				// We've reached a dead-end
 				break;
