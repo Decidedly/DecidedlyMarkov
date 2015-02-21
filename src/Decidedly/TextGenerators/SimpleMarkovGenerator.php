@@ -114,7 +114,7 @@ class SimpleMarkovGenerator {
 
 			$suffixesForCurrentPrefix = $this->dataSource->getSuffixesForPrefix($currentWord);
 
-
+			
 			if(isset($suffixesForCurrentPrefix) && is_array($suffixesForCurrentPrefix)) {
 				if(count($suffixesForCurrentPrefix) > 1) {
 					$phraseIsInevitable = false;

@@ -39,7 +39,7 @@ class MySqlDataSource implements MarkovDataSource {
 		}
 	}
 
-	private function addRelationHelper($prefix, $suffix, $count) {
+	public function addRelationHelper($prefix, $suffix, $count) {
 		$prefixId = $this->prefixSelect($prefix);
 		if(empty($prefixId)) {
 			$prefixId = $this->prefixInsert($prefix);
@@ -120,7 +120,7 @@ class MySqlDataSource implements MarkovDataSource {
 		$sql = "SELECT suffix.text, relations.count FROM {$this->tablePrefix}prefix as `prefix`
 	INNER JOIN {$this->tablePrefix}relations AS `relations` ON `prefix`.`id` =  `relations`.prefix_id
 	INNER JOIN {$this->tablePrefix}suffix AS `suffix` ON relations.suffix_id = suffix.id
-	WHERE prefix.text=:prefix";
+	WHERE prefix.text = :prefix";
 
 		$q = $this->dbh->prepare($sql);
 		$q->execute(array(':prefix'=>$prefix));
